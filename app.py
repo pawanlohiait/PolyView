@@ -12,7 +12,8 @@ VALID_STATUSES = {
     'unknown': 'Unknown'
 }
 
-# In-memory registry for service telemetry data
+
+# TEMPORARY COLD FLUSH: Wipe all cloud memory completely
 SERVICES_REGISTRY = {
     'Network Monitor': {
         'status': 'Idle',
@@ -37,9 +38,23 @@ def normalize_status(status: str) -> str:
     return VALID_STATUSES.get(str(status).strip().lower(), str(status).title())
 
 @app.route('/')
-def dashboard():
-    """Renders the single-pane-of-glass dashboard UI with registered services data."""
-    return render_template('index.html', services=SERVICES_REGISTRY)
+@app.route('/api/flush-memory', methods=['GET'])
+def flush_memory():
+    """Manually clear the active dictionary metrics during the live demo."""
+    global SERVICES_REGISTRY
+    SERVICES_REGISTRY = {
+        'Network Monitor': {
+            'status': 'Idle',
+            'metrics': {'Live Packets': 0, 'Alerts Detected': 0},
+            'last_seen': 'Never'
+        },
+        'Server Health': {
+            'status': 'Idle',
+            'metrics': {'CPU Usage': '0%', 'RAM Usage': '0%'},
+            'last_seen': 'Never'
+        }
+    }
+    return jsonify({"message": "Memory successfully cleared back to default state!"}), 200
 
 @app.route('/api/update', methods=['POST'])
 def update_service_data():
