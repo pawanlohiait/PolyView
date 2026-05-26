@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PolyView console</title>
+    <!-- Live polling updates the UI every 5 seconds without a page reload -->
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #0b0f19;
+            color: #f1f5f9;
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar navigation fixed element */
+        .sidebar {
+            width: 260px;
+            background-color: #111827;
+            padding: 30px 20px;
+            border-right: 1px solid #1f2937;
+        }
+
+        .sidebar h2 {
+            font-size: 1.3rem;
+            color: #38bdf8;
+            letter-spacing: 1px;
+            margin-bottom: 30px;
+        }
+
+        .nav-item {
+            display: block;
+            color: #9ca3af;
+            text-decoration: none;
+            padding: 12px 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .nav-item.active, .nav-item:hover {
+            background-color: #1f2937;
+            color: #38bdf8;
+        }
+
+        /* Main Display Workspace */
+        .main-container {
+            flex-grow: 1;
+            padding: 40px;
+        }
+
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #1f2937;
+            padding-bottom: 20px;
+            margin-bottom: 35px;
+        }
+
+        .dashboard-header h1 {
+            font-size: 2rem;
+            font-weight: 600;
+        }
+
+        .live-indicator {
+            background-color: rgba(16, 185, 129, 0.1);
+            color: #10b981;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: bold;
+            border: 1px solid rgba(16, 185, 129, 0.2);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .live-status {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 8px;
+        }
+
+        .service-count {
+            color: #cbd5e1;
+            font-size: 0.9rem;
+        }
+
+        .status-error {
+            background-color: rgba(239, 68, 68, 0.12);
+            color: #f87171;
+            border-color: rgba(239, 68, 68, 0.25);
+        }
+
+        /* Grid for Multi-Service Cards */
+        .services-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 25px;
+        }
+
+        .service-card {
+            background-color: #111827;
+            border: 1px solid #1f2937;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .card-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .service-name {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #f8fafc;
+        }
+
+        .status-badge {
+            font-size: 0.75rem;
+            font-weight: bold;
+            padding: 4px 10px;
+            border-radius: 12px;
+            text-transform: uppercase;
+        }
+
+        .status-active { background-color: #064e3b; color: #34d399; }
+        .status-idle { background-color: #374151; color: #9ca3af; }
+        .status-alert { background-color: #7f1d1d; color: #f87171; }
+
+        /* Metric Rows styling */
+        .metric-row {
+            display: flex;
+            justify-content: space-between;
+            background-color: #1f2937;
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            font-size: 0.95rem;
+        }
+
+        .metric-label { color: #9ca3af; }
+        .metric-value { font-weight: 600; color: #e2e8f0; }
+
+        .timestamp {
+            font-size: 0.75rem;
+            color: #6b7280;
+            margin-top: 15px;
+            text-align: right;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Sidebar Menu Navigation -->
+    <div class="sidebar">
+        <h2>POLYVIEW</h2>
+        <a href="#" class="nav-item active">Infrastructure Overview</a>
+        <a href="#" class="nav-item">API Tokens</a>
+        <a href="#" class="nav-item">System Controls</a>
+    </div>
+
+    <!-- Main Section -->
+    <div class="main-container">
+        <div class="dashboard-header">
+            <div>
+                <h1>Central Operations Hub</h1>
+                <p style="color: #6b7280; font-size: 0.95rem; margin-top: 4px;">Monitoring integrated macro/micro network utilities.</p>
+            </div>
+            <div class="live-status">
+                <span id="sync-status" class="live-indicator">● LIVE SYNC ACTIVE</span>
+                <span id="service-count" class="service-count">{{ services|length }} services</span>
+            </div>
+        </div>
+
+        <!-- Cards are compiled and drawn natively using Jinja template loops -->
+        <div class="services-grid">
+            {% for name, details in services.items() %}
+            <div class="service-card">
+                <div class="card-top">
+                    <span class="service-name">{{ name }}</span>
+                    <!-- Adaptive styling according to status definitions -->
+                    <span class="status-badge 
+                        {% if details.status|lower == 'active' %}status-active
+                        {% elif details.status|lower == 'alert' %}status-alert
+                        {% else %}status-idle{% endif %}">
+                        {{ details.status }}
+                    </span>
+                </div>
+
+                <!-- Inner structural loops parsing unknown quantities of key-value parameters dynamically -->
+                {% for label, val in details.metrics.items() %}
+                <div class="metric-row">
+                    <span class="metric-label">{{ label }}</span>
+                    <span class="metric-value">{{ val }}</span>
+                </div>
+                {% endfor %}
+
+                <div class="timestamp">Last sync heartbeat: {{ details.last_seen }}</div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    <script>
+    // Grab all nav items that are not the active dashboard
+    const links = document.querySelectorAll('.nav-item');
+    links.forEach(link => {
+        if (!link.classList.contains('active')) {
+            link.addEventListener('click', (e) => {
+                e.preventDefault(); // Stop the page from jump-scrolling
+                alert(`${link.innerText} module is simulated. This feature is slated for Phase 2 implementation (Security & Access Control Layer).`);
+            });
+        }
+    });
+
+    const grid = document.querySelector('.services-grid');
+    const countLabel = document.getElementById('service-count');
+    const syncStatus = document.getElementById('sync-status');
+
+    const statusClassMap = {
+        active: 'status-active',
+        alert: 'status-alert',
+        idle: 'status-idle'
+    };
+
+    function buildServiceCard(name, details) {
+        const card = document.createElement('div');
+        card.className = 'service-card';
+
+        const badgeType = statusClassMap[details.status?.toLowerCase()] || 'status-idle';
+        const metrics = details.metrics || {};
+
+        card.innerHTML = `
+            <div class="card-top">
+                <span class="service-name">${name}</span>
+                <span class="status-badge ${badgeType}">${details.status || 'Unknown'}</span>
+            </div>
+            ${Object.entries(metrics).map(([label, value]) => `
+                <div class="metric-row">
+                    <span class="metric-label">${label}</span>
+                    <span class="metric-value">${value}</span>
+                </div>
+            `).join('')}
+            <div class="timestamp">Last sync heartbeat: ${details.last_seen || 'Never'}</div>
+        `;
+
+        return card;
+    }
+
+    async function refreshServices() {
+        try {
+            const response = await fetch('/api/services');
+            if (!response.ok) {
+                throw new Error('Failed to load service data');
+            }
+
+            const services = await response.json();
+            grid.innerHTML = '';
+
+            Object.entries(services).forEach(([name, details]) => {
+                grid.appendChild(buildServiceCard(name, details));
+            });
+
+            countLabel.textContent = `${Object.keys(services).length} services`;
+            syncStatus.textContent = '● LIVE SYNC ACTIVE';
+            syncStatus.classList.remove('status-error');
+        } catch (error) {
+            syncStatus.textContent = '● SYNC ERROR';
+            syncStatus.classList.add('status-error');
+            console.error(error);
+        }
+    }
+
+    setInterval(refreshServices, 5000);
+    window.addEventListener('DOMContentLoaded', refreshServices);
+</script>
+
+</body>
+</html>
