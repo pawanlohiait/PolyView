@@ -1,9 +1,9 @@
 from flask import Flask, render_template, request, jsonify
 from datetime import datetime
+import os
 
 app = Flask(__name__)
 
-# Valid standardized statuses for clean frontend UI assignment
 VALID_STATUSES = {
     'active': 'Active',
     'idle': 'Idle',
@@ -12,84 +12,62 @@ VALID_STATUSES = {
     'unknown': 'Unknown'
 }
 
-
-# TEMPORARY COLD FLUSH: Wipe all cloud memory completely
+# The central data registry holding your baseline services
 SERVICES_REGISTRY = {
     'Network Monitor': {
         'status': 'Idle',
-        'metrics': {'Live Packets': 0, 'Alerts Detected': 0},
+        'metrics': {'Packets Parsed': 0, 'Security Flags': 0},
         'last_seen': 'Never'
     },
     'Server Health': {
         'status': 'Idle',
-        'metrics': {'CPU Usage': '0%', 'RAM Usage': '0%'},
+        'metrics': {'CPU Core Load': '0%', 'Available VRAM': '0%'},
         'last_seen': 'Never'
     }
 }
 
 def current_timestamp() -> str:
-    """Returns a uniform, clean local timestamp format."""
-    return datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    """Returns a clean timestamp for the frontend view."""
+    return datetime.now().strftime('%H:%M:%S')
 
 def normalize_status(status: str) -> str:
-    """Standardizes incoming statuses to match our dashboard expectations."""
+    """Cleans up messy incoming status text strings automatically."""
     if not status:
         return VALID_STATUSES['unknown']
     return VALID_STATUSES.get(str(status).strip().lower(), str(status).title())
 
 @app.route('/')
 def dashboard():
-    """Renders the single-pane-of-glass dashboard UI with registered services data."""
-    return render_template('index.html', services=SERVICES_REGISTRY)
-@app.route('/api/flush-memory', methods=['GET'])
-def flush_memory():
-    """Manually clear the active dictionary metrics during the live demo."""
-    global SERVICES_REGISTRY
-    SERVICES_REGISTRY = {
-        'Network Monitor': {
-            'status': 'Idle',
-            'metrics': {'Live Packets': 0, 'Alerts Detected': 0},
-            'last_seen': 'Never'
-        },
-        'Server Health': {
-            'status': 'Idle',
-            'metrics': {'CPU Usage': '0%', 'RAM Usage': '0%'},
-            'last_seen': 'Never'
-        }
-    }
-    return jsonify({"message": "Memory successfully cleared back to default state!"}), 200
+    """Renders the HTML interface template page."""
+    return render_template('index.html', services=SERVICES_REGISTRY, developer_signature="UCST Student")
+
+@app.route('/api/metrics', methods=['GET'])
+def get_live_metrics():
+    """Silent API route that feeds data to your HTML live auto-refresh script."""
+    return jsonify(SERVICES_REGISTRY)
 
 @app.route('/api/update', methods=['POST'])
 def update_service_data():
-    """
-    Universal Endpoint. Any external script/service can send its data here.
-    """
+    """Universal API Endpoint that catches and stores data from ALL your scripts."""
     payload = request.get_json()
-    
     if not payload or 'service_name' not in payload:
-        return jsonify({"error": "Invalid payload. 'service_name' is required."}), 400
+        return jsonify({"error": "Invalid payload data layout."}), 400
     
     name = payload['service_name']
     raw_status = payload.get('status', 'Unknown')
-    
-    # Clean up the status using our normalization utilities
     status = normalize_status(raw_status)
     metrics = payload.get('metrics', {})
     timestamp = current_timestamp()
 
-    # Dynamically register or update the service data inside the registry
+    # Dynamically inject or update the service inside our active memory store
     SERVICES_REGISTRY[name] = {
         "status": status,
         "metrics": metrics,
         "last_seen": timestamp
     }
-    
-    return jsonify({"message": f"Successfully synced data for '{name}'."}), 200
-
-import os
+    return jsonify({"status": "synced", "system_mode": "production"}), 200
 
 if __name__ == '__main__':
-    print("[SYSTEM] Booting PolyView Engine...")
-    # Render assigns a dynamic port variable; fallback to 5000 for local runs
+    print("[INIT] Booting PolyView Central Aggregator Cloud Engine...")
     port = int(os.environ.get("PORT", 5000))
     app.run(debug=False, host='0.0.0.0', port=port)
