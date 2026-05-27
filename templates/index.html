@@ -1,294 +1,215 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta http-equiv="refresh" content="3">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PolyView console</title>
-    <!-- Live polling updates the UI every 5 seconds without a page reload -->
+    <title>PolyView // Operational Hub</title>
     <style>
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        :root { 
+            --bg-dark: #0f111a; 
+            --card-bg: #1e2235; 
+            --text-main: #e2e8f0; 
+            --accent-blue: #3b82f6; 
+            --accent-green: #10b981;
+            --accent-purple: #8b5cf6;
+            --accent-pink: #ef4444;
+            --accent-yellow: #f59e0b;
         }
-
-        body {
-            background-color: #0b0f19;
-            color: #f1f5f9;
-            display: flex;
-            min-height: 100vh;
-        }
-
-        /* Sidebar navigation fixed element */
-        .sidebar {
-            width: 260px;
-            background-color: #111827;
-            padding: 30px 20px;
-            border-right: 1px solid #1f2937;
-        }
-
-        .sidebar h2 {
-            font-size: 1.3rem;
-            color: #38bdf8;
-            letter-spacing: 1px;
-            margin-bottom: 30px;
-        }
-
-        .nav-item {
-            display: block;
-            color: #9ca3af;
-            text-decoration: none;
-            padding: 12px 15px;
-            border-radius: 8px;
-            margin-bottom: 10px;
-            font-weight: 500;
-            transition: all 0.2s ease;
-        }
-
-        .nav-item.active, .nav-item:hover {
-            background-color: #1f2937;
-            color: #38bdf8;
-        }
-
-        /* Main Display Workspace */
-        .main-container {
-            flex-grow: 1;
-            padding: 40px;
-        }
-
-        .dashboard-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid #1f2937;
-            padding-bottom: 20px;
-            margin-bottom: 35px;
-        }
-
-        .dashboard-header h1 {
-            font-size: 2rem;
-            font-weight: 600;
-        }
-
-        .live-indicator {
-            background-color: rgba(16, 185, 129, 0.1);
-            color: #10b981;
-            padding: 6px 14px;
-            border-radius: 20px;
-            font-size: 0.85rem;
-            font-weight: bold;
-            border: 1px solid rgba(16, 185, 129, 0.2);
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .live-status {
-            display: flex;
-            flex-direction: column;
-            align-items: flex-end;
-            gap: 8px;
-        }
-
-        .service-count {
-            color: #cbd5e1;
-            font-size: 0.9rem;
-        }
-
-        .status-error {
-            background-color: rgba(239, 68, 68, 0.12);
-            color: #f87171;
-            border-color: rgba(239, 68, 68, 0.25);
-        }
-
-        /* Grid for Multi-Service Cards */
-        .services-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-            gap: 25px;
-        }
-
-        .service-card {
-            background-color: #111827;
-            border: 1px solid #1f2937;
-            border-radius: 12px;
-            padding: 24px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-        }
-
-        .card-top {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-
-        .service-name {
-            font-size: 1.2rem;
-            font-weight: 600;
-            color: #f8fafc;
-        }
-
-        .status-badge {
-            font-size: 0.75rem;
-            font-weight: bold;
-            padding: 4px 10px;
-            border-radius: 12px;
-            text-transform: uppercase;
-        }
-
-        .status-active { background-color: #064e3b; color: #34d399; }
-        .status-idle { background-color: #374151; color: #9ca3af; }
-        .status-alert { background-color: #7f1d1d; color: #f87171; }
-
-        /* Metric Rows styling */
-        .metric-row {
-            display: flex;
-            justify-content: space-between;
-            background-color: #1f2937;
-            padding: 12px 16px;
-            border-radius: 8px;
-            margin-bottom: 10px;
-            font-size: 0.95rem;
-        }
-
-        .metric-label { color: #9ca3af; }
-        .metric-value { font-weight: 600; color: #e2e8f0; }
-
-        .timestamp {
-            font-size: 0.75rem;
-            color: #6b7280;
-            margin-top: 15px;
-            text-align: right;
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg-dark); color: var(--text-main); margin: 0; padding: 20px; }
+        .container { max-width: 1000px; margin: 0 auto; }
+        
+        /* Header section */
+        .header-panel { border-bottom: 2px solid var(--card-bg); padding-bottom: 15px; margin-bottom: 20px; }
+        h1 { color: var(--accent-blue); margin: 0 0 5px 0; font-size: 26px; letter-spacing: 1px; }
+        .signature-text { font-size: 14px; color: #94a3b8; margin: 0; }
+        
+        /* Navigation Tabs Control Menu */
+        .tabs-menu { display: flex; gap: 10px; margin-bottom: 25px; border-bottom: 2px solid var(--card-bg); padding-bottom: 10px; }
+        .tab-btn { background: #141824; color: #94a3b8; border: 1px solid #2e354f; padding: 10px 20px; border-radius: 6px; font-weight: bold; cursor: pointer; transition: all 0.2s ease; }
+        .tab-btn:hover { background: #232a3d; color: #ffffff; }
+        .tab-btn.active { background: var(--accent-blue); color: #ffffff; border-color: var(--accent-blue); box-shadow: 0 0 10px rgba(59, 130, 246, 0.3); }
+        
+        /* Tab Contents Layout Visibility state */
+        .tab-content { display: none; animation: fadeIn 0.3s ease; }
+        .tab-content.active { display: block; }
+        
+        /* Grid Display and Metric Cards */
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+        .card { background: var(--card-bg); padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); border-left: 4px solid var(--accent-blue); }
+        .card-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; margin-bottom: 15px; }
+        .card-header h3 { margin: 0; font-size: 18px; color: #ffffff; }
+        
+        /* Badges */
+        .badge { padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; text-transform: uppercase; }
+        .badge-active { background: rgba(16, 185, 129, 0.2); color: var(--accent-green); border: 1px solid var(--accent-green); }
+        .badge-idle { background: rgba(107, 114, 128, 0.2); color: #94a3b8; border: 1px solid #6b7280; }
+        .badge-alert { background: rgba(245, 158, 11, 0.2); color: var(--accent-yellow); border: 1px solid var(--accent-yellow); }
+        .badge-error { background: rgba(239, 68, 68, 0.2); color: var(--accent-pink); border: 1px solid var(--accent-pink); }
+        
+        .metric-row { display: flex; justify-content: space-between; margin: 10px 0; font-size: 14px; }
+        .metric-row span { color: #94a3b8; }
+        .metric-row strong { color: #f8fafc; font-family: monospace; font-size: 15px; }
+        
+        /* Plain Text Info Blocks */
+        .info-box { background: var(--card-bg); padding: 25px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); line-height: 1.6; color: #cbd5e1; }
+        .info-title { font-size: 20px; font-weight: bold; color: var(--accent-blue); margin-bottom: 15px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 8px; }
+        
+        .footer { text-align: center; margin-top: 50px; font-size: 12px; color: #64748b; padding-top: 20px; border-top: 1px solid var(--card-bg); }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
         }
     </style>
 </head>
 <body>
-
-    <!-- Sidebar Menu Navigation -->
-    <div class="sidebar">
-        <h2>POLYVIEW</h2>
-        <a href="#" class="nav-item active">Infrastructure Overview</a>
-        <a href="#" class="nav-item">API Tokens</a>
-        <a href="#" class="nav-item">System Controls</a>
-    </div>
-
-    <!-- Main Section -->
-    <div class="main-container">
-        <div class="dashboard-header">
-            <div>
-                <h1>Central Operations Hub</h1>
-                <p style="color: #6b7280; font-size: 0.95rem; margin-top: 4px;">Monitoring integrated macro/micro network utilities.</p>
-            </div>
-            <div class="live-status">
-                <span id="sync-status" class="live-indicator">● LIVE SYNC ACTIVE</span>
-                <span id="service-count" class="service-count">{{ services|length }} services</span>
-            </div>
+    <div class="container">
+        
+        <div class="header-panel">
+            <h1>🚀 POLYVIEW // The Overengineered Spy Hub</h1>
+            <p class="signature-text">This Magic Machine Was Programmed By: 👤 <strong>{{ developer_signature }}</strong></p>
+        </div>
+        
+        <div class="tabs-menu">
+            <button class="tab-btn active" onclick="switchTab('live-panel', this)">Live Monitoring</button>
+            <button class="tab-btn" onclick="switchTab('about-panel', this)">What is this?</button>
+            <button class="tab-btn" onclick="switchTab('stats-panel', this)">Developer Stats</button>
         </div>
 
-        <!-- Cards are compiled and drawn natively using Jinja template loops -->
-        <div class="services-grid">
-            {% for name, details in services.items() %}
-            <div class="service-card">
-                <div class="card-top">
-                    <span class="service-name">{{ name }}</span>
-                    <!-- Adaptive styling according to status definitions -->
-                    <span class="status-badge 
-                        {% if details.status|lower == 'active' %}status-active
-                        {% elif details.status|lower == 'alert' %}status-alert
-                        {% else %}status-idle{% endif %}">
-                        {{ details.status }}
-                    </span>
-                </div>
-
-                <!-- Inner structural loops parsing unknown quantities of key-value parameters dynamically -->
-                {% for label, val in details.metrics.items() %}
-                <div class="metric-row">
-                    <span class="metric-label">{{ label }}</span>
-                    <span class="metric-value">{{ val }}</span>
+        <div id="live-panel" class="tab-content active">
+            <h2 style="font-size: 18px; color: #94a3b8; margin-bottom: 15px; margin-top: 0;">🤖 Alive Background Programs</h2>
+            <div class="grid" id="dashboard-grid">
+                {% for name, info in services.items() %}
+                <div class="card" id="card-{{ name|replace(' ', '-') }}">
+                    <div class="card-header">
+                        <h3>{{ name }}</h3>
+                        <span class="badge badge-{{ info.status|lower }}">
+                            {% if info.status == 'Active' %}🔥 Chugging Along
+                            {% elif info.status == 'Idle' %}😴 Sleeping
+                            {% elif info.status == 'Alert' %}👀 PANIC!
+                            {% else %}💥 Exploded
+                            {% endif %}
+                        </span>
+                    </div>
+                    <div class="metrics-list">
+                        {% for metric_key, metric_val in info.metrics.items() %}
+                        <div class="metric-row">
+                            <span>{{ metric_key }}:</span>
+                            <strong>{{ metric_val }}</strong>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <div class="metric-row" style="color: #64748b; font-size: 11px; margin-top: 15px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 8px;">
+                        <span>Last Gossip Received:</span>
+                        <span class="timestamp" style="color: var(--accent-purple);">{{ info.last_seen }}</span>
+                    </div>
                 </div>
                 {% endfor %}
-
-                <div class="timestamp">Last sync heartbeat: {{ details.last_seen }}</div>
             </div>
-            {% endfor %}
         </div>
-    </div>
-    <script>
-    // Grab all nav items that are not the active dashboard
-    const links = document.querySelectorAll('.nav-item');
-    links.forEach(link => {
-        if (!link.classList.contains('active')) {
-            link.addEventListener('click', (e) => {
-                e.preventDefault(); // Stop the page from jump-scrolling
-                alert(`${link.innerText} module is simulated. This feature is slated for Phase 2 implementation (Security & Access Control Layer).`);
-            });
-        }
-    });
 
-    const grid = document.querySelector('.services-grid');
-    const countLabel = document.getElementById('service-count');
-    const syncStatus = document.getElementById('sync-status');
-
-    const statusClassMap = {
-        active: 'status-active',
-        alert: 'status-alert',
-        idle: 'status-idle'
-    };
-
-    function buildServiceCard(name, details) {
-        const card = document.createElement('div');
-        card.className = 'service-card';
-
-        const badgeType = statusClassMap[details.status?.toLowerCase()] || 'status-idle';
-        const metrics = details.metrics || {};
-
-        card.innerHTML = `
-            <div class="card-top">
-                <span class="service-name">${name}</span>
-                <span class="status-badge ${badgeType}">${details.status || 'Unknown'}</span>
+        <div id="about-panel" class="tab-content">
+            <div class="info-box" style="border-top: 4px solid var(--accent-purple);">
+                <div class="info-title" style="color: var(--accent-purple);">🍕 What is PolyView Actually Doing?</div>
+                <p>Instead of forcing you to open 50 different black terminal boxes to check on your code, <strong>PolyView</strong> acts like a master gossip hub. It sets up a single internet mailbox (an API endpoint).</p>
+                <p>Any random background python script running on your PC can throw its data directly into this mailbox. PolyView catches it, reads the labels, and instantly slaps a flashy new visual card onto your web screen without needing a database or any server reboots!</p>
             </div>
-            ${Object.entries(metrics).map(([label, value]) => `
-                <div class="metric-row">
-                    <span class="metric-label">${label}</span>
-                    <span class="metric-value">${value}</span>
-                </div>
-            `).join('')}
-            <div class="timestamp">Last sync heartbeat: ${details.last_seen || 'Never'}</div>
-        `;
+        </div>
 
-        return card;
-    }
+        <div id="stats-panel" class="tab-content">
+            <div class="info-box" style="border-top: 4px solid var(--accent-green);">
+                <div class="info-title" style="color: var(--accent-green);">🕹️ Developer RPG Stats</div>
+                <p>This software environment profile was constructed entirely from scratch to secure a passing grade from our professor and unlock graduation status.</p>
+                <table style="width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 14px;">
+                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                        <td style="padding: 10px 0; color: #94a3b8;">Code Warrior Name:</td>
+                        <td style="padding: 10px 0; font-weight: bold; text-align: right; color: var(--accent-blue);">Your Name Here</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                        <td style="padding: 10px 0; color: #94a3b8;">Guild Roll Number:</td>
+                        <td style="padding: 10px 0; font-weight: bold; text-align: right; color: var(--accent-pink);">Enter Roll/Seat Number</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                        <td style="padding: 10px 0; color: #94a3b8;">Class Level:</td>
+                        <td style="padding: 10px 0; font-weight: bold; text-align: right; color: var(--accent-yellow);">Final Year Student</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 10px 0; color: #94a3b8;">Magic Spell Inventory:</td>
+                        <td style="padding: 10px 0; font-weight: bold; text-align: right; color: var(--accent-green);">Python, Flask API, JS Fetch, Dark Magic CSS</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
 
-    async function refreshServices() {
-        try {
-            const response = await fetch('/api/services');
-            if (!response.ok) {
-                throw new Error('Failed to load service data');
-            }
+        <div class="footer">Made with pure caffeine and minimal sleep • No loops were harmed in making this dashboard.</div>
+    </div>
 
-            const services = await response.json();
-            grid.innerHTML = '';
-
-            Object.entries(services).forEach(([name, details]) => {
-                grid.appendChild(buildServiceCard(name, details));
-            });
-
-            countLabel.textContent = `${Object.keys(services).length} services`;
-            syncStatus.textContent = '● LIVE SYNC ACTIVE';
-            syncStatus.classList.remove('status-error');
-        } catch (error) {
-            syncStatus.textContent = '● SYNC ERROR';
-            syncStatus.classList.add('status-error');
-            console.error(error);
+    <script>
+        function switchTab(tabId, buttonElement) {
+            // Hide all tabs components
+            const contents = document.querySelectorAll('.tab-content');
+            contents.forEach(content => content.classList.remove('active'));
+            
+            // Remove active decoration from all buttons
+            const buttons = document.querySelectorAll('.tab-btn');
+            buttons.forEach(btn => btn.classList.remove('active'));
+            
+            // Activate current selection targets
+            document.getElementById(tabId).classList.add('active');
+            buttonElement.classList.add('active');
         }
-    }
 
-    setInterval(refreshServices, 5000);
-    window.addEventListener('DOMContentLoaded', refreshServices);
-</script>
+        // Asynchronous Live Refresher Execution
+        function updateDashboardUI() {
+            fetch('/api/metrics')
+                .then(response => response.json())
+                .then(data => {
+                    const grid = document.getElementById('dashboard-grid');
+                    
+                    Object.keys(data).forEach(serviceName => {
+                        const serviceData = data[serviceName];
+                        const cardId = `card-${serviceName.replace(/\s+/g, '-')}`;
+                        let cardElement = document.getElementById(cardId);
+                        
+                        let metricsHTML = '';
+                        Object.keys(serviceData.metrics).forEach(mKey => {
+                            metricsHTML += `
+                                <div class="metric-row">
+                                    <span>${mKey}:</span>
+                                    <strong>${serviceData.metrics[mKey]}</strong>
+                                </div>`;
+                        });
 
+                        let funnyStatus = "💥 Exploded";
+                        if(serviceData.status === 'Active') funnyStatus = "🔥 Chugging Along";
+                        if(serviceData.status === 'Idle') funnyStatus = "😴 Sleeping";
+                        if(serviceData.status === 'Alert') funnyStatus = "👀 PANIC!";
+
+                        if (!cardElement) {
+                            const newCard = document.createElement('div');
+                            newCard.className = 'card';
+                            newCard.id = cardId;
+                            grid.appendChild(newCard);
+                            cardElement = newCard;
+                        }
+
+                        cardElement.innerHTML = `
+                            <div class="card-header">
+                                <h3>${serviceName}</h3>
+                                <span class="badge badge-${serviceData.status.toLowerCase()}">${funnyStatus}</span>
+                            </div>
+                            <div class="metrics-list">${metricsHTML}</div>
+                            <div class="metric-row" style="color: #64748b; font-size: 11px; margin-top: 15px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 8px;">
+                                <span>Last Gossip Received:</span>
+                                <span class="timestamp" style="color: var(--accent-purple);">${serviceData.last_seen}</span>
+                            </div>`;
+                    });
+                })
+                .catch(err => console.error("Data tracking loop sync dropped:", err));
+        }
+
+        // Keep updating live metrics background script every 3 seconds seamlessly
+        setInterval(updateDashboardUI, 3000);
+    </script>
 </body>
 </html>
