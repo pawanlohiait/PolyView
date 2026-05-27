@@ -38,6 +38,9 @@ def normalize_status(status: str) -> str:
     return VALID_STATUSES.get(str(status).strip().lower(), str(status).title())
 
 @app.route('/')
+def dashboard():
+    """Renders the single-pane-of-glass dashboard UI with registered services data."""
+    return render_template('index.html', services=SERVICES_REGISTRY)
 @app.route('/api/flush-memory', methods=['GET'])
 def flush_memory():
     """Manually clear the active dictionary metrics during the live demo."""
